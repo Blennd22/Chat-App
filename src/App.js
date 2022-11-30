@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import './App.css';
 
 import firebase from 'firebase/compat/app';
@@ -21,6 +21,7 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const firestore = firebase.firestore();
+let profilePicture;
 let profilePic;
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        <h1>⚛️🔥💬</h1>
+        <h1>Chat For Blendi and Ada</h1>
         <SignOut />
       </header>
 
@@ -42,7 +43,7 @@ function SignIn() {
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).then((re) => {
-      return (profilePic = re.user.photoURL);
+      return (profilePicture = re.user.photoURL);
     });
   };
 
@@ -52,7 +53,9 @@ function SignIn() {
         Sign in with Google
       </button>
       <p>
-        Do not violate the community guidelines or you will be banned for life!
+        Sign in if you are Blendi or Ada.
+        <br />
+        Otherwise...Piss off!
       </p>
     </>
   );
@@ -70,6 +73,8 @@ function SignOut() {
 
 function ChatRoom() {
   const dummy = useRef();
+
+  profilePic = auth.currentUser._delegate.photoURL;
   const messagesRef = firestore.collection('messages');
   const query = messagesRef.orderBy('createdAt').limit(25);
 
@@ -80,13 +85,13 @@ function ChatRoom() {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    const { uid, photoURL } = auth.currentUser;
+    const { uid } = auth.currentUser;
 
     await messagesRef.add({
       text: formValue,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       uid,
-      photoURL,
+      photoURL: profilePic,
     });
 
     setFormValue('');
@@ -110,7 +115,7 @@ function ChatRoom() {
         />
 
         <button type="submit" disabled={!formValue}>
-          🕊️
+          💖
         </button>
       </form>
     </>
@@ -118,7 +123,7 @@ function ChatRoom() {
 }
 
 function ChatMessage(props) {
-  const { text, uid, photoURL } = props.message;
+  const { text, uid } = props.message;
 
   const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received';
 
